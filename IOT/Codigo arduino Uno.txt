@@ -1,0 +1,38 @@
+#define rele 3
+#define sensor A0
+
+int limiarSeco = 350;
+
+void setup() {
+  pinMode(rele, OUTPUT);
+  digitalWrite(rele, HIGH); // bomba desligada
+  Serial.begin(9600);
+}
+
+void loop() {
+  int valorSensor = analogRead(sensor);
+  bool bombaLigada = false;
+  int tempoLigada = 0;
+
+  if (valorSensor > limiarSeco) {
+    bombaLigada = true;
+    tempoLigada = 10; // segundos
+    digitalWrite(rele, LOW); // liga bomba
+    delay(20000);
+    digitalWrite(rele, HIGH); // desliga bomba
+  }
+
+  float vazao = 0.025; // litros/minuto
+  float volume = (vazao / 60.0) * tempoLigada;
+
+  // Envia dados para ESP8266
+  Serial.print(valorSensor);
+  Serial.print(",");
+  Serial.print(bombaLigada);
+  Serial.print(",");
+  Serial.print(tempoLigada * 1000); // envia em milissegundos
+  Serial.print(",");
+  Serial.println(volume, 4);
+
+  delay(300000); // aguarda 5 minutos
+}

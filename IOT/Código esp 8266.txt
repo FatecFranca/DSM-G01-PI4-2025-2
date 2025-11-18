@@ -1,0 +1,72 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
+const char* ssid = "Quarto_Di";
+const char* password = "01126890";
+const char* serverUrl = "http://192.168.7.3:3000/api/umidade";
+
+void setup() {
+  Serial.begin(9600); // comunicação com Arduino
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectando ao Wi-Fi...");
+  }
+
+  Serial.println("Wi-Fi conectado!");
+}
+
+void loop() {
+  if (Serial.available()) {
+    String linha = Serial.readStringUntil('\n');
+    linha.trim();
+
+    int sep1 = linha.indexOf(',');
+    int sep2 = linha.indexOf(',', sep1 + 1);
+    int sep3 = linha.indexOf(',', sep2 + 1);
+
+    if (sep1 == -1 || sep2 == -1 || sep3 == -1) {
+      Serial.println("Formato inválido recebido.");
+      return;
+    }
+
+    String umidadeStr = linha.substring(0, sep1);
+    String bombaStr = linha.substring(sep1 + 1, sep2);
+    String tempoStr = linha.substring(sep2 + 1, sep3);
+    String volumeStr = linha.substring(sep3 + 1);
+
+    int umidade = umidadeStr.toInt();
+    bool bomba = bombaStr == "1";
+    int tempoMs = tempoStr.toInt();
+    float volume = volumeStr.toFloat();
+    float tempoSegundos = tempoMs / 1000.0;
+
+    if (WiFi.status() == WL_CONNECTED) {
+      WiFiClient client;
+      HTTPClient http;
+      http.begin(client, serverUrl);
+      http.addHeader("Content-Type", "application/json");
+
+      String payload = "{";
+      payload += "\"umidade\": " + String(umidade) + ",";
+      payload += "\"bomba\": " + String(bomba ? "true" : "false") + ",";
+      payload += "\"tempo\": " + String(tempoSegundos, 1) + ",";
+      payload += "\"volume\": " + String(volume, 4);
+      payload += "}";
+
+      Serial.println("Enviando JSON:");
+      Serial.println(payload);
+
+      int httpCode = http.POST(payload);
+      Serial.println("Código HTTP: " + String(httpCode));
+      Serial.println("Resposta: " + http.getString());
+
+      http.end();
+    } else {
+      Serial.println("Wi-Fi desconectado.");
+    }
+  }
+
+  delay(1000); // verifica a cada segundo
+}
