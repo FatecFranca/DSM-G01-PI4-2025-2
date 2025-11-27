@@ -7,24 +7,38 @@ module.exports = {
 
     const existente = await User.findByEmail(email);
     if (existente) {
-      return res.status(400).json({ message: 'Email já cadastrado' });
+      return res.status(400).json({ success: false, message: 'Email já cadastrado' });
     }
 
     const novoUsuario = await User.create({ email, senha, nome });
-    res.status(201).json({ message: 'Usuário criado com sucesso' });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Usuário criado com sucesso',
+      usuario: {
+        id: novoUsuario.id,
+        email: novoUsuario.email,
+        nome: novoUsuario.nome
+      }
+    });
   },
 
-async login(req, res) {
-  const { email, senha } = req.body;
+  async login(req, res) {
+    const { email, senha } = req.body;
 
-  const usuario = await User.findByEmail(email);
-  if (!usuario || usuario.senha !== senha) {
-    return res.status(401).json({ message: 'Credenciais inválidas' });
+    const usuario = await User.findByEmail(email);
+    if (!usuario || usuario.senha !== senha) {
+      return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login bem-sucedido',
+      usuario: {
+        id: usuario.id,
+        email: usuario.email,
+        nome: usuario.nome
+      }
+    });
   }
-
-req.login(usuario, (err) => {
-  if (err) return res.status(500).json({ message: 'Erro ao logar' });
-  return res.status(200).json({ message: 'Login bem-sucedido' });
-});
-}
-}
+};

@@ -1,5 +1,0 @@
-
-{
-  "name": "Monitor de Irrigação IoT para Plantas (React)",
-  "description": "Uma aplicação web em React para monitorar e controlar um sistema de irrigação de plantas baseado em IoT. Possui uma página de login, um painel de dados em tempo real e uma página de estatísticas para integração com o Power BI."
-}
